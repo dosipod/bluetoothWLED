@@ -150,8 +150,8 @@
 #define USERMOD_ID_KLIPPER               40     // Usermod Klipper percentage
 #define USERMOD_ID_WIREGUARD             41     //Usermod "wireguard.h"
 
-#define USERMOD_ID_BACKGROUND            50     //Usermod "usermod_v2_background.h" 
-#define USERMOD_ID_TDISPLAY              51     //Usermod "usermod_v2_tdisplay.h" 
+#define USERMOD_ID_TDISPLAY              50     //Usermod "usermod_v2_tdisplay.h" 
+#define USERMOD_ID_BLE_SYNC              51     //Usermod "usermod_v2_ble_sync.h" 
 
 //Access point behavior
 #define AP_BEHAVIOR_BOOT_NO_CONN          0     //Open AP when no connection after boot

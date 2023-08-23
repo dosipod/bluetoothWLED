@@ -285,31 +285,6 @@ DEBUG_PRINTLN(F("Watchdog: disabled"));
 #endif
 }
 
-#if defined(WLED_ENABLE_BACKGROUND)
-void WLED::backgroundTask(void *parameter)
-{
-  // WLED *instance = static_cast<WLED *>(parameter);
-  
-  for (;;)
-  {
-    // instance->usermods.backgroundLoop();
-    usermods.backgroundLoop();
-    EVERY_N_MILLISECONDS(150){ delay(1); }
-  }
-}
-
-void WLED::backgroundSetup(){
-  xTaskCreatePinnedToCore(
-      backgroundTask,         /* Task function. */
-      "BGTask",               /* name of task. */
-      backgroundStackSize,    /* Stack size of task */
-      this,                   /* parameter of the task */
-      1,                      /* priority of the task */
-      &BackgroundTaskHandle,  /* Task handle to keep track of created task */
-      xPortGetCoreID() == 0 ? 1 : 0); /* pin task to other core */      
-}
-#endif
-
 void WLED::setup()
 {
   #if defined(ARDUINO_ARCH_ESP32) && defined(WLED_DISABLE_BROWNOUT_DET)
@@ -521,10 +496,6 @@ void WLED::setup()
   #if defined(ARDUINO_ARCH_ESP32) && defined(WLED_DISABLE_BROWNOUT_DET)
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 1); //enable brownout detector
   #endif
-
-  #if defined(WLED_ENABLE_BACKGROUND)
-  backgroundSetup();
-  #endif
 }
 
 void WLED::beginStrip()
@@ -558,6 +529,10 @@ void WLED::initAP(bool resetAP)
 {
   if (apBehavior == AP_BEHAVIOR_BUTTON_ONLY && !resetAP)
     return;
+
+  #if defined(WLED_ENABLE_WIFI_SWITCH)
+  if (wifiDisabled) return;
+  #endif
 
   if (resetAP) {
     WLED_SET_AP_SSID();
@@ -701,6 +676,10 @@ void WLED::initConnection()
   #ifdef WLED_ENABLE_WEBSOCKETS
   ws.onEvent(wsEvent);
   #endif
+  
+  #if defined(WLED_ENABLE_WIFI_SWITCH)
+  if (wifiDisabled) return;
+  #endif
 
   WiFi.disconnect(true);        // close old connections
 #ifdef ESP8266
@@ -823,7 +802,11 @@ void WLED::handleConnection()
   if (now < 2000 && (!WLED_WIFI_CONFIGURED || apBehavior == AP_BEHAVIOR_ALWAYS))
     return;
 
+  #if defined(WLED_ENABLE_WIFI_SWITCH)
+  if (lastReconnectAttempt == 0 && !wifiDisabled) {
+  #else
   if (lastReconnectAttempt == 0) {
+  #endif
     DEBUG_PRINTLN(F("lastReconnectAttempt == 0"));
     initConnection();
     return;
@@ -884,12 +867,22 @@ void WLED::handleConnection()
       sendImprovStateResponse(0x03, true);
       improvActive = 2;
     }
+
+    #if defined(WLED_ENABLE_WIFI_SWITCH)
+    if (now - lastReconnectAttempt > ((stac) ? 300000 : 18000) && WLED_WIFI_CONFIGURED && !wifiDisabled) {
+    #else
     if (now - lastReconnectAttempt > ((stac) ? 300000 : 18000) && WLED_WIFI_CONFIGURED) {
+    #endif
       if (improvActive == 2) improvActive = 3;
       DEBUG_PRINTLN(F("Last reconnect too old."));
       initConnection();
     }
+    
+    #if defined(WLED_ENABLE_WIFI_SWITCH)
+    if (!apActive && now - lastReconnectAttempt > 12000 && (!wasConnected || apBehavior == AP_BEHAVIOR_NO_CONN) && !wifiDisabled) {
+    #else
     if (!apActive && now - lastReconnectAttempt > 12000 && (!wasConnected || apBehavior == AP_BEHAVIOR_NO_CONN)) {
+    #endif
       DEBUG_PRINTLN(F("Not connected AP."));
       initAP();
     }
@@ -916,6 +909,17 @@ void WLED::handleConnection()
     }
   }
 }
+
+#if defined(WLED_ENABLE_WIFI_SWITCH)
+void WLED::disableWiFi() {
+  wifiDisabled = true;
+  WiFi.disconnect(true);
+}
+
+void WLED::enableWiFi() {
+  wifiDisabled = false;
+}
+#endif
 
 // If status LED pin is allocated for other uses, does nothing
 // else blink at 1Hz when WLED_CONNECTED is false (no WiFi, ?? no Ethernet ??)

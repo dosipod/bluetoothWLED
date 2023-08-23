@@ -10,10 +10,6 @@ void UsermodManager::loop()              { for (byte i = 0; i < numMods; i++) um
 void UsermodManager::handleOverlayDraw() { for (byte i = 0; i < numMods; i++) ums[i]->handleOverlayDraw(); }
 void UsermodManager::appendConfigData()  { for (byte i = 0; i < numMods; i++) ums[i]->appendConfigData(); }
 
-#if defined(WLED_ENABLE_BACKGROUND)
-void UsermodManager::backgroundLoop()    { for (byte i = 0; i < numMods; i++) ums[i]->backgroundLoop();  }
-#endif
-
 bool UsermodManager::handleButton(uint8_t b) {
   bool overrideIO = false;
   for (byte i = 0; i < numMods; i++) {

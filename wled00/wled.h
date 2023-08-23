@@ -832,15 +832,10 @@ WLED_GLOBAL volatile uint8_t jsonBufferLock _INIT(0);
 
 class WLED {
 public:
-  #if defined(WLED_ENABLE_BACKGROUND)
-  TaskHandle_t BackgroundTaskHandle;
-    #if defined(BACKGROUND_STACK_SIZE)
-    uint16_t backgroundStackSize = BACKGROUND_STACK_SIZE;
-    #else
-    uint16_t backgroundStackSize = 10000;
-    #endif
+  #if defined(WLED_ENABLE_WIFI_SWITCH)
+  bool wifiDisabled = false;
   #endif
-
+  
   WLED();
   static WLED& instance()
   {
@@ -864,9 +859,9 @@ public:
   void enableWatchdog();
   void disableWatchdog();
 
-  #if defined(WLED_ENABLE_BACKGROUND)
-    static void backgroundTask(void *parameter);
-    void backgroundSetup();
+  #if defined(WLED_ENABLE_WIFI_SWITCH)
+  void disableWiFi();
+  void enableWiFi();
   #endif
 };
 #endif        // WLED_H
