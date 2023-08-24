@@ -47,6 +47,7 @@ private:
 #endif
   bool skipRows = false;
   bool needRedraw = true;
+  bool tftReady = false;
   
   // TTGO T-Display
   String knownSsid = "";
@@ -89,11 +90,14 @@ public:
 
     setBrightness(tftBrightness);
     needRedraw = true;
+    tftReady = true;
   }
 
   // ------------------------------------------------------------
   void updateDisplay()
   {
+    if(!tftReady) return;
+
     // Check if values which are shown on display changed from the last time.
     if (((apActive) ? String(apSSID) : WiFi.SSID()) != knownSsid)
     {
