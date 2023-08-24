@@ -150,18 +150,6 @@ class UsermodBackgroundBLESync : public UsermodBackground {
       stateUpdated(CALL_MODE_NOTIFICATION);
     }
 
-    // Fired when WiFi is (re-)connected.
-    // Initialize own network interfaces here
-    // ------------------------------------------------------------
-    void connected()
-    {
-      DEBUG_PRINTLN(F("UsermodBackgroundBLESync :: connected"));
-      
-      if(!bleInitialized && bleEnabled && wifiEnabled){
-        wifiTimeoutTime = millis() + (wifiTimeout * 60000);
-      }
-    }
-
     // WLED State Change
     // ------------------------------------------------------------
     void onStateChange(uint8_t mode)
@@ -200,7 +188,10 @@ class UsermodBackgroundBLESync : public UsermodBackground {
     // ------------------------------------------------------------
     void backgroundLoop(){
 
-      // TODO: Enable WiFi - Will require reboot to enable BLE again
+      // TODO: Disable WiFi - Will require reboot to enable BLE again
+      if(bleEnabled && !bleInitialized && wifiTimeoutTime == 0){
+        wifiTimeoutTime = millis() + (wifiTimeout * 60000);
+      }
 
       // Disable WiFi - Start BLE Functionality
       if(wifiTimeoutTime != 0 && wifiTimeoutTime < millis()){
