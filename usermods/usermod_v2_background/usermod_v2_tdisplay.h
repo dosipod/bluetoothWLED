@@ -120,9 +120,6 @@ public:
       needRedraw = true;
     }
 
-    if (tftNextTimeout < millis())
-      setBrightness(0);
-
     if (!needRedraw)
       return;
 
@@ -232,9 +229,13 @@ public:
   // ------------------------------------------------------------
   void backgroundLoop()
   {
-    if(needRedraw)
-    {
+    if(needRedraw){
       updateDisplay();
+    }
+    
+    if(tftNextTimeout != 0 && tftNextTimeout < millis()){
+      setBrightness(5);
+      tftNextTimeout = 0;
     }
   }
 
